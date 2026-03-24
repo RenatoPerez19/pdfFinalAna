@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Anacrazy PDF</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: white;
+    text-align: center;
+
+    background: 
+        linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)),
+        url("/anacrazy_Pdf/project/static/fondo.jpeg"
+        );
+
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+}
+
+.container {
+    padding-top: 80px;
+}
+
+
+    .box {
+    background: transparent;   /* sin fondo */
+    backdrop-filter: none;     /* sin difuminado */
+    padding: 30px;
+    border-radius: 15px;
+    display: inline-block;
+
+}
+
+button {
+    background: #ff4b2b;
+    border: none;
+    padding: 12px 25px;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #c7c2c3;
+}
+
+#preview img {
+    width: 100px;
+    margin: 10px;
+    border-radius: 10px;
+}
+
+#drop-area {
+    border: 2px dashed #aaa;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+    <h1>🔥 ANACRAZY PDF 🔥</h1>
+    <p> de rena para ustedes😏</p>
+
+    <div class="box">
+
+        <div id="drop-area">
+            <p>Arrastrá imágenes acá 📂</p>
+        </div>
+
+        <form action="/convert" method="post" enctype="multipart/form-data">
+            <input type="file" name="images" multiple accept="image/*" required>
+
+            <div id="preview"></div>
+
+            <br>
+            <button type="submit">Convertir a PDF</button>
+        </form>
+
+    </div>
+</div>
+
+<script>
+    const input = document.querySelector('input[type="file"]');
+    const preview = document.getElementById('preview');
+    const dropArea = document.getElementById("drop-area");
+    
+    let archivos = [];
+    
+    // FUNCION RENDER
+    function renderPreview() {
+        preview.innerHTML = "";
+    
+        archivos.forEach((file, index) => {
+            const reader = new FileReader();
+    
+            reader.onload = function(e) {
+                const container = document.createElement("div");
+                container.style.display = "inline-block";
+                container.style.position = "relative";
+                container.style.margin = "10px";
+    
+                const img = document.createElement("img");
+                img.src = e.target.result;
+                img.style.width = "100px";
+                img.style.borderRadius = "10px";
+                img.draggable = true;
+    
+                // BORRAR BOTON
+                const btn = document.createElement("button");
+                btn.innerHTML = "❌";
+                btn.style.position = "absolute";
+                btn.style.top = "0";
+                btn.style.right = "0";
+                btn.style.background = "red";
+                btn.style.color = "white";
+                btn.style.border = "none";
+                btn.style.cursor = "pointer";
+    
+                btn.onclick = () => {
+                    archivos.splice(index, 1);
+                    actualizarInput();
+                    renderPreview();
+                };
+    
+                // DRAG PARA ORDENAR
+                img.addEventListener("dragstart", (e) => {
+                    e.dataTransfer.setData("index", index);
+                });
+    
+                img.addEventListener("dragover", (e) => {
+                    e.preventDefault();
+                });
+    
+                img.addEventListener("drop", (e) => {
+                    e.preventDefault();
+                    const fromIndex = e.dataTransfer.getData("index");
+                    const toIndex = index;
+    
+                    const temp = archivos[fromIndex];
+                    archivos[fromIndex] = archivos[toIndex];
+                    archivos[toIndex] = temp;
+    
+                    actualizarInput();
+                    renderPreview();
+                });
+    
+                container.appendChild(img);
+                container.appendChild(btn);
+                preview.appendChild(container);
+            };
+    
+            reader.readAsDataURL(file);
+        });
+    }
+    
+    // ACTUALIZAR INPUT REAL
+    function actualizarInput() {
+        const dataTransfer = new DataTransfer();
+        archivos.forEach(file => dataTransfer.items.add(file));
+        input.files = dataTransfer.files;
+    }
+    
+    // INPUT NORMAL
+    input.addEventListener("change", () => {
+    const nuevos = Array.from(input.files);
+
+    nuevos.forEach(nuevo => {
+        const existe = archivos.some(file => file.name === nuevo.name);
+
+        if (existe) {
+            const confirmar = confirm(
+                "⚠️ Che capooo 😎\n\nYa subiste esta imagen:\n" + nuevo.name + 
+                "\n\n¿La querés agregar igual?"
+            );
+
+            if (confirmar) {
+                archivos.push(nuevo); // solo una vez
+            }
+            // si NO confirma, no se agrega nada
+        } else {
+            archivos.push(nuevo);
+        }
+    });
+
+    actualizarInput();
+    renderPreview();
+});
+
+    
+    // DRAG & DROP EXTERNO
+    dropArea.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropArea.style.borderColor = "white";
+    });
+    
+    dropArea.addEventListener("dragleave", () => {
+        dropArea.style.borderColor = "#aaa";
+    });
+    
+    dropArea.addEventListener("drop", (e) => {
+    e.preventDefault();
+
+    const nuevos = Array.from(e.dataTransfer.files);
+
+    nuevos.forEach(nuevo => {
+        const existe = archivos.some(file => file.name === nuevo.name);
+
+        if (existe) {
+            const confirmar = confirm(
+                "⚠️ Che capooo 😎\n\nYa subiste esta imagen:\n" + nuevo.name +
+                "\n\n¿La querés agregar igual?"
+            );
+
+            if (confirmar) {
+                archivos.push(nuevo); // solo una vez
+            }
+        } else {
+            archivos.push(nuevo);
+        }
+    });
+
+    actualizarInput();
+    renderPreview();
+});
+
+    </script>
+</body>
+</html>
+</html>
